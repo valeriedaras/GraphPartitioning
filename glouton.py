@@ -2,7 +2,7 @@
 """
 Created on Fri Nov 27 15:44:09 2015
 
-@author: valeriedaras
+@author: Valérie Daras, Julie Rivière
 """
 import sys 
 
@@ -23,8 +23,8 @@ def nodeWithLessNeighbor(graph,markingList):
     neighborsMin = sys.maxint
     for node in graph.nodes():
         if node in markingList:
-            if degree(node) < neighborsMin:
-                neighborsMin = degree
+            if graph.degree(node) < neighborsMin:
+                neighborsMin = graph.degree(node)
                 nodeMin = node
                 if neighborsMin == 1:
                     break

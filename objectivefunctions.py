@@ -1,6 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Valérie Daras, Julie Rivière
+"""
 def calculateWeight(s1,s2,graph):
     # 0 is default value if (s1-s2) doesn't exist
-    return graph.get_edge_data(s1,s2,0)
+    try:
+        value = graph.get_edge_data(s1,s2,0)['weight']
+    except (TypeError):
+        value = 0
+    return value
 
     
 # a tester    

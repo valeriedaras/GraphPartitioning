@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+@author: Valérie Daras, Julie Rivière
+"""
+
 import os 
 import sys
 from random import randint
@@ -7,9 +11,11 @@ import matplotlib.pyplot as plt
 
 import objectivefunctions as objf
 
-filename = "/home/jriviere/Bureau/OC/add20.graph"
-copyFilename = "/home/jriviere/Bureau/OC/add200.graph"
+#filename = "/home/jriviere/Bureau/OC/add20.graph"
+#copyFilename = "/home/jriviere/Bureau/OC/add200.graph"
 
+filename = "/Users/User/Documents/GitHub/GraphPartitioning/add20.graph"
+copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/add200.graph"
 
 # copyFile prend un fichier source (.graph) et le modifie en ajoutant
 # un poids random pour chaque voisin 
@@ -37,7 +43,8 @@ def copyFile(source, destination):
         dst.write("%s" % newline) 
     src.close()
     dst.close()
-    
+
+# même comportement que copyFile mais poids = 1    
 def copyFileUnit(source, destination):
     src = open(source, 'r')
     dst = open(destination, 'w')
@@ -61,7 +68,10 @@ def copyFileUnit(source, destination):
     src.close()
     dst.close()
     
-    
+
+### Graph functions ###
+ 
+# Cree un graphe a partir du graphe décrit dans le fichier source   
 def createGraph(source):
     graph=nx.Graph()
     src = open(source, 'r')
@@ -82,13 +92,18 @@ def createGraph(source):
         numLine = numLine+1 
                 
     src.close()
-    #print graph.number_of_nodes()
-    #nx.draw(graph)
-    #plt.show()
-    
+    return graph
 
-    
+# Dessine le graphe     
+def drawGraph(graph):
+    nx.draw(graph)
+    plt.show()
 
+# Recuperer le nombre de noeuds d'un graphe    
+def getNumberOfNodes(graph):
+    return graph.number_of_nodes()
+    
+### MAIN ###
 
 def main():
 	copyFile(filename,copyFilename)	
@@ -96,8 +111,4 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
         main()
-        sys.exit(0)
-    except KeyboardInterrupt:
-        exit(0)
