@@ -6,6 +6,7 @@ Created on Fri Nov 27 15:44:09 2015
 """
 import sys 
 import operator
+import time
 
 # a supprimer : pour les tests 
 import script as s
@@ -36,12 +37,14 @@ def nodeWithLessNeighbor(graph,markingList):
 
 def removeMarkingNodes(neighborsHeap, markingList):
     newList = []
-    for node in markingList:
-        for i in range(len(neighborsHeap)):
-            a = neighborsHeap[i][0]
-            b = neighborsHeap[i][1]
-            if a != node:
-               newList.append((a,b))
+    print "markingList:"
+    print markingList
+                
+    for i in range(len(neighborsHeap)):
+        a = neighborsHeap[i][0]
+        b = neighborsHeap[i][1]
+        if a not in markingList:
+            newList.append((a,b))
     return newList
     
 # revoir commentaires    
@@ -62,6 +65,7 @@ def setPotentialNodesList(graph,node, markingList, potentialNodesList):
     # gestion des doublons
     # on enleve les sommets qui ont déjà été marqués
     neighborsHeap = removeMarkingNodes(neighborsHeap, markingList)
+    print "end of removeMarkingNodes"
     return neighborsHeap
     
        
@@ -94,8 +98,8 @@ def glouton(k, graph):
         # Réinitialisation des structures
         # Restructuration du graphe : suppression des sommets marqués
         graph.remove_nodes_from(markingList)
-        #markingList = [] 
-        #potentialNodesList = []
+        markingList = [] 
+        potentialNodesList = []
         i = i+1
         # Initialisation de la prochaine partition
         if i != k :
@@ -112,7 +116,8 @@ def glouton(k, graph):
     
         
 def main():
-    copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
+    #copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
+    copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
     graph = s.createGraph(copyFilename)
     glouton(2,graph)
 
