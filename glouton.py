@@ -33,8 +33,19 @@ def nodeWithLessNeighbor(graph,markingList):
                 if neighborsMin == 1:
                     break
     return nodeMin
+
+def removeMarkingNodes(neighborsHeap, markingList):
+    newList = []
+    for node in markingList:
+        for i in range(len(neighborsHeap)):
+            a = neighborsHeap[i][0]
+            b = neighborsHeap[i][1]
+            if a != node:
+               newList.append((a,b))
+    return newList
     
-def setPotentialNodesList(graph,node, markingList):
+# revoir commentaires    
+def setPotentialNodesList(graph,node, markingList, potentialNodesList):
     # neighborsDict est un dictionnaire contenant les voisins de node
     # ex : {17: {'weight': 4}, 10: {'weight': 7}, 11: {'weight': 3}}
     neighborsDict = graph[node]
@@ -44,14 +55,16 @@ def setPotentialNodesList(graph,node, markingList):
     # neighborsHeap : liste ordonnée des voisins, la 1ere valeur est le sommet
     # ayant le plus petit poids
     # ex : [11, 17, 10]
-    neighborsHeap = [a for (a, b) in sortedNDict]
+    #neighborsHeap = [a for (a, b) in sortedNDict]
+    neighborsHeap = sortedNDict + potentialNodesList
+    neighborsHeap.sort(key=operator.itemgetter(1))    
+    # on ajoute ces nouveaux voisins à l'ancienne potentialNodeList
+    # gestion des doublons
     # on enleve les sommets qui ont déjà été marqués
-    for node in markingList:
-        if node in neighborsHeap:
-            neighborsHeap.remove(node)
+    neighborsHeap = removeMarkingNodes(neighborsHeap, markingList)
     return neighborsHeap
     
-        
+       
  # parametres : k le nombre de partitions, graphe    
 def glouton(k, graph):
     # initialisation
@@ -62,7 +75,7 @@ def glouton(k, graph):
     # initialisation du sommet de départ
     s0 = nodeWithLessNeighbor(graph, markingList)
     markingList.append(s0)
-    potentialNodesList = setPotentialNodesList(graph,s0, markingList)
+    potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)
     # initialisation de i : numéro de partition courante
     i = 1
     while i < k:
@@ -72,9 +85,9 @@ def glouton(k, graph):
         # j : nombre de sommets actuellement dans la partition courante
         j=1 	# on compte le sommet de départ
         while potentialNodesList != [] and j < ni:
-            m = potentialNodesList[0]
+            m = potentialNodesList[-1][0]
             markingList.append(m)
-            potentialNodesList = setPotentialNodesList(graph,m, markingList)
+            potentialNodesList = setPotentialNodesList(graph,m, markingList, potentialNodesList)
             j = j+1
         # Affectation de la partition créée à la liste de partitions
         partitionList.append(markingList)
@@ -88,7 +101,7 @@ def glouton(k, graph):
         if i != k :
             s0 = nodeWithLessNeighbor(graph, markingList)
             markingList.append(s0)
-            potentialNodesList = setPotentialNodesList(graph,s0, markingList)
+            potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)
     # partitionList ← sommets restants 
     partitionList.append(graph.nodes())
     print partitionList
@@ -103,6 +116,12 @@ def main():
     graph = s.createGraph(copyFilename)
     glouton(2,graph)
 
+def main2():
+    theList = [(1, {'weight': 1}), (2, {'weight': 1}), (1, {'weight': 8}),(1, {'weight': 8})]
+    markingList = [1]
+    theList = removeMarkingNodes(theList, markingList)
+    print theList
+    
 
 if __name__ == '__main__':
         main()
