@@ -17,6 +17,7 @@ import objectivefunctions as objf
 filename = "/Users/User/Documents/GitHub/GraphPartitioning/add20.graph"
 copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/add200.graph"
 
+
 # copyFile prend un fichier source (.graph) et le modifie en ajoutant
 # un poids random pour chaque voisin 
 # notation : poids1 voisin1 poids2 voisin2...
