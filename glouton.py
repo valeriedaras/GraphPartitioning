@@ -6,7 +6,7 @@ Created on Fri Nov 27 15:44:09 2015
 """
 import sys 
 import operator
-import time
+
 
 # a supprimer : pour les tests 
 import script as s
@@ -15,6 +15,7 @@ import script as s
 # se construit par appels récursifs
 def calculateSizeListSubGraph(k, i, niList, graph):
     n = graph.number_of_nodes()
+    print "number of nodes in graphe : ", n
     s = 0
     for j in niList:    
         s = s + j
@@ -37,8 +38,6 @@ def nodeWithLessNeighbor(graph,markingList):
 
 def removeMarkingNodes(neighborsHeap, markingList):
     newList = []
-    print "markingList:"
-    print markingList
                 
     for i in range(len(neighborsHeap)):
         a = neighborsHeap[i][0]
@@ -65,13 +64,13 @@ def setPotentialNodesList(graph,node, markingList, potentialNodesList):
     # gestion des doublons
     # on enleve les sommets qui ont déjà été marqués
     neighborsHeap = removeMarkingNodes(neighborsHeap, markingList)
-    print "end of removeMarkingNodes"
     return neighborsHeap
     
        
  # parametres : k le nombre de partitions, graphe    
 def glouton(k, graph):
     # initialisation
+    initGraph = graph.copy()
     niList = []
     markingList = [] 
     potentialNodesList = []
@@ -84,8 +83,9 @@ def glouton(k, graph):
     i = 1
     while i < k:
         # Calcul de ni : nombre de sommets pour la prochaine partition
-        niList = calculateSizeListSubGraph(k, i, niList, graph)
+        niList = calculateSizeListSubGraph(k, i, niList, initGraph)
         ni = niList[i-1]
+        print ni
         # j : nombre de sommets actuellement dans la partition courante
         j=1 	# on compte le sommet de départ
         while potentialNodesList != [] and j < ni:
@@ -119,7 +119,7 @@ def main():
     #copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
     copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
     graph = s.createGraph(copyFilename)
-    glouton(2,graph)
+    glouton(3,graph)
 
 def main2():
     theList = [(1, {'weight': 1}), (2, {'weight': 1}), (1, {'weight': 8}),(1, {'weight': 8})]
