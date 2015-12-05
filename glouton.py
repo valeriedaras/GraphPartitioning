@@ -15,7 +15,7 @@ import script as s
 # se construit par appels récursifs
 def calculateSizeListSubGraph(k, i, niList, graph):
     n = graph.number_of_nodes()
-    print "number of nodes in graphe : ", n
+    #print "number of nodes in graph : ", n
     s = 0
     for j in niList:    
         s = s + j
@@ -46,7 +46,7 @@ def removeMarkingNodes(neighborsHeap, markingList):
             newList.append((a,b))
     return newList
     
-# revoir commentaires    
+   
 def setPotentialNodesList(graph,node, markingList, potentialNodesList):
     # neighborsDict est un dictionnaire contenant les voisins de node
     # ex : {17: {'weight': 4}, 10: {'weight': 7}, 11: {'weight': 3}}
@@ -54,14 +54,9 @@ def setPotentialNodesList(graph,node, markingList, potentialNodesList):
     # dans sortedNDict, le plus petit poids est en premier
     # ex : [(11, {'weight': 3}), (17, {'weight': 4}), (10, {'weight': 7})]
     sortedNDict = sorted(neighborsDict.items(), key=operator.itemgetter(1))
-    # neighborsHeap : liste ordonnée des voisins, la 1ere valeur est le sommet
-    # ayant le plus petit poids
-    # ex : [11, 17, 10]
-    #neighborsHeap = [a for (a, b) in sortedNDict]
+    # neighborsHeap : ajout des nouveaux voisins à l'ancienne potentialNodeList
     neighborsHeap = sortedNDict + potentialNodesList
     neighborsHeap.sort(key=operator.itemgetter(1))    
-    # on ajoute ces nouveaux voisins à l'ancienne potentialNodeList
-    # gestion des doublons
     # on enleve les sommets qui ont déjà été marqués
     neighborsHeap = removeMarkingNodes(neighborsHeap, markingList)
     return neighborsHeap
@@ -85,7 +80,7 @@ def glouton(k, graph):
         # Calcul de ni : nombre de sommets pour la prochaine partition
         niList = calculateSizeListSubGraph(k, i, niList, initGraph)
         ni = niList[i-1]
-        print ni
+        #print ni
         # j : nombre de sommets actuellement dans la partition courante
         j=1 	# on compte le sommet de départ
         while potentialNodesList != [] and j < ni:
@@ -108,7 +103,10 @@ def glouton(k, graph):
             potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)
     # partitionList ← sommets restants 
     partitionList.append(graph.nodes())
-    print partitionList
+    graph = initGraph
+    # probleme : si on ne return pas le graphe, ici il est bien égal
+    # à tout le graphe mais sans le return il vaut une partition...
+    return partitionList, graph
 
 
             
