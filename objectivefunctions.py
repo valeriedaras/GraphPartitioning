@@ -2,6 +2,10 @@
 """
 @author: Valérie Daras, Julie Rivière
 """
+
+# Fonction permettant de calculer la valuation 
+# entre les sommets s1 et s2 dans graph
+# retourne 0 si s1 et s2 ne sont pas voisins
 def calculateWeight(s1,s2,graph):
     # 0 is default value if (s1-s2) doesn't exist
     try:
@@ -11,7 +15,8 @@ def calculateWeight(s1,s2,graph):
     return value
 
     
-# a tester    
+# Fonction qui calcule le coût de la coupe 
+# entre les partitions p1 et p2 dans graph
 def calculateCut(p1,p2,graph):
     result = 0
     for s1 in p1:
@@ -19,12 +24,13 @@ def calculateCut(p1,p2,graph):
             result = result + calculateWeight(s1,s2,graph)
     return result 
     
-# a tester    
+# Fonction qui calcule le coût de la coupe 
+# entre toutes les partitions pk dans graph
 def calculateCutPk(pk,graph):
     result = 0
-    for s1 in range(len(pk)):
-        for s2 in range(s1+1, len(pk)):
-            result = result + calculateCut(s1,s2,graph)
+    for p1 in range(len(pk)):
+        for p2 in range(p1+1, len(pk)):
+            result = result + calculateCut(p1,p2,graph)
     return result 
     
 # a tester    

@@ -10,23 +10,8 @@ import script as s
 import glouton as g 
 import objectivefunctions as objf
 
-
-def nodeGain(node,partitionA,inA,graph):
-    nbNeighborsInA = 0
-    nbNeighborsInB = 0
-    for neighbors in nx.all_neighbors(graph,node):
-        if neighbors in partitionA:
-            nbNeighborsInA += 1 
-        else:
-            nbNeighborsInB +=1
-    #print node
-    #print "voisins dans A:", nbNeighborsInA, "voisins dans B:", nbNeighborsInB
-    if inA == 1:
-        return nbNeighborsInB - nbNeighborsInA
-    elif inA == 0:
-        return nbNeighborsInA - nbNeighborsInB
         
-def nodeGain2(node,partition,graph):
+def nodeGain(node,partition,graph):
     nbNeighborsIn = 0
     nbNeighborsOut = 0
     for neighbors in nx.all_neighbors(graph,node):
@@ -42,13 +27,10 @@ def associateGain(A,B,graph):
     newDictA = {}
     newDictB = {}
     for node in A:
-        #gain = nodeGain(node,A,1,graph)
-        gain = nodeGain2(node,A,graph)
+        gain = nodeGain(node,A,graph)
         newDictA[node] = gain
     for node in B:
-        #gain = nodeGain(node,A,0,graph)
-        gain = nodeGain2(node,B,graph)
-        #gain = nodeGain(node,B,1,graph)
+        gain = nodeGain(node,B,graph)
         newDictB[node] = gain
     return newDictA, newDictB
     
@@ -79,20 +61,6 @@ def updateNeighborsGain(s1,s2,S1,S2,G1,G2,graph):
     newS2.append(s1)
     # newGi : gains si on permute s1 et s2
     newG1, newG2 = associateGain(newS1,newS2,graph)
-    '''for neighborsS1 in nx.all_neighbors(graph,s1):
-        if neighborsS1 == s2:
-            G2[neighborsS1]=newG1[neighborsS1]
-        elif neighborsS1 in G1:
-            G1[neighborsS1]=newG1[neighborsS1]
-        elif neighborsS1 in G2:
-            G2[neighborsS1]=newG2[neighborsS1]
-    for neighborsS2 in nx.all_neighbors(graph,s2):
-        if neighborsS2 == s1:
-            G1[neighborsS2]=newG2[neighborsS2]
-        elif neighborsS2 in G1:
-            G1[neighborsS2]=newG1[neighborsS2]
-        elif neighborsS2 in G2:
-            G2[neighborsS2]=newG2[neighborsS2]'''
     return newG1, newG2
     #return G1,G2
             
@@ -227,12 +195,114 @@ def kl(graph):
     print "Partition Finale 1: ", partitionsList[0]
     print "Partition Finale 2: ", partitionsList[1]
 
+def calculateFictifGain(s1,s2,P1,P2,graph):
+    # échange des sommets s1 et s2
+    newP1 = list(P1)
+    newP1.remove(s1)
+    newP1.append(s2)
+    newP2 = list(P2)
+    newP2.remove(s2)
+    newP2.append(s1)
+    # newG : gain si on permute s1 et s2
+    newG = objf.calculateCut(newP1, newP2, graph)
+    return newG
+
+
+def kl2(graph):
+    ## Initialisation ##
+
+    # Sert à mémoriser les sommets échangés
+    exchangedNodes = []
+    # Liste de partitions
+    partitionsList = []
+    # Initialisation des listes de sommets à étudier 
+    # (une par partition)
+    remainingNodesS1 = []
+    remainingNodesS2 = []
+    
+    #  Initialisation des listes de gains reels (une par partition)
+    #Gain = 0
+    
+    #  Initialisation des listes de gain fictif
+    GFictif = 0
+    
+    
+    ## Déroulement de l'algo ##    
+    # bipartition
+    partitionsList, graph = g.glouton(2,graph)
+    
+    # Mise a jour des listes des sommets à étudier
+    remainingNodesS1 = list(partitionsList[0])
+    remainingNodesS2 = list(partitionsList[1])
+    print "Partition Init 1: ", remainingNodesS1
+    print "Partition Init 2: ", remainingNodesS2
+    
+    optimum = False
+    
+    # boucle principale
+
+    # calcul du gain global initial
+    globalMin = objf.calculateCut(remainingNodesS1,remainingNodesS2,graph)
+    print "Global Min Initial:", globalMin
+
+    while remainingNodesS1 != [] and remainingNodesS2 != [] and not optimum:
+        improvement = False
+        P1 = list(partitionsList[0])
+        P2 = list(partitionsList[1])
+    
+        localMin = sys.maxint
+
+        # On inverse l'ordre de P1 et de P2 car les derniers sommets ajoutés
+        # sont les plus susceptibles à ressortir en premier
+        for nodeA in reversed(remainingNodesS1):
+            # s1 : sommet candidat de S1 pour un échange
+            s1 = nodeA
+
+            for nodeB in reversed(remainingNodesS2):
+                # on cherche le meilleur candidat pour un échange avec s1
+                # Calcul du gain lié à l'échange de a et b : G(a,b)
+                gainAB = calculateFictifGain(s1, nodeB, P1, P2, graph)
+                
+                if gainAB < localMin:
+                    localMin = gainAB
+                    # s2 : sommet candidat de S2 pour un échange avec s1
+                    s2 = nodeB
+                    print "Nouveau gain local:", localMin, "Nodes: ", s1, s2
+                    GFictif = gainAB
+                
+                    
+            # Mise a jour du gain global
+            if (GFictif < globalMin):
+                improvement = True
+                globalMin = GFictif
+                print "Nouveau gain global:", globalMin, "Nodes:", s1, s2
+                exchangedNodes.append(s1)
+                exchangedNodes.append(s2)
+                
+                # P ← échanger les sommets s1 et s2
+                print "Les noeuds",s1,"et",s2, "ont été échangés"
+                partitionsList = switchNodes(partitionsList,s1,s2)
+                print "Partition 1:", partitionsList[0]
+                print "Partition 2:", partitionsList[1]
+                
+                # Mise a jour des listes des sommets à étudier
+                remainingNodesS1 = setRemainingNodes(partitionsList[0],exchangedNodes)
+                remainingNodesS2 = setRemainingNodes(partitionsList[1],exchangedNodes)
+
+  
+        if (improvement == False):
+            print "Optimum trouve!"
+            optimum = True
+ 
+    print "Partition Finale 1: ", partitionsList[0]
+    print "Partition Finale 2: ", partitionsList[1]
     
 def main():
     #copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
     copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
     graph = s.createGraph(copyFilename)
-    kl(graph)
+    #kl(graph)
+    kl2(graph)
 
 if __name__ == '__main__':
         main()
