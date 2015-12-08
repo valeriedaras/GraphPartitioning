@@ -52,10 +52,6 @@ def weightMatrix(graph):
 def defineObjf(cij, graph):
     n = graph.number_of_nodes()
     
-    # Variable Aij
-    global A 
-    A = {}
-    
     # Variable Xi
     global X
     X = {}
@@ -64,18 +60,21 @@ def defineObjf(cij, graph):
     global Y
     Y = {}
     
+    #A
+    global A
+    Y = {}
+    
     # Variable model Gurobi
     global model 
     model = Model('partitioning')
     
     for i in range(n):
         X[i] = model.addVar(vtype=GRB.BINARY, name="X"+str(i), obj=0)
-        if i < n:
-            for j in range(i+1):
-                A[i,j] = model.addVar(vtype=GRB.BINARY, name="A"+str(i)+str(j), obj=cij[i][j])
-                A[j,i] = A[i,j]
-                Y[i,j] = model.addVar(vtype=GRB.BINARY, name="Y"+str(i)+str(j), obj=0)
-                Y[j,i] = Y[i,j]
+        for j in range(i+1):
+            A[i,j] = model.addVar(vtype=GRB.BINARY, name="A"+str(i)+str(j), obj=cij[i][j])
+            A[j,i] = A[i,j]
+            Y[i,j] = model.addVar(vtype=GRB.BINARY, name="Y"+str(i)+str(j), obj=0)
+            Y[j,i] = Y[i,j]
     model.modelSense = GRB.MINIMIZE
     #model.modelSense = GRB.MAXIMIZE
     model.update()
@@ -89,19 +88,24 @@ Contraintes :
 4. Choix d'un représentant : pour tout les sommets i tels que xi=1
                             sum sur j de 1 à i-1 (xi x xij) = 0'''
 
-def defineConstraints(graph, k):
+def defineConstraints(cij, graph, k):
     n = graph.number_of_nodes()
     
     # Contrainte 1
+    # Un sommet i représentant d'une partition ne peut pas avoir de sommet j voisin en-dessous de lui
     for i in range(n):
         for j in range (i-1):
             L1 = LinExpr([1,1], [X[i], Y[i,j]])
             model.addConstr(L1, "<=", 1)
     
     # Contrainte 2
+    # Le nombre de partitions est égal au nombre de représentants
     model.addConstr(quicksum(X[i] for i in range (n)) == k)
     
     # Contrainte 3
+    # Inégalité triangulaire 
+    # Si i est dans une partition avec j et k, 
+    # alors j et k sont aussi dans une même partition
     for i in range(n):
         for j in range (i, n):
             for k in range (j, n):
@@ -109,16 +113,23 @@ def defineConstraints(graph, k):
                 model.addConstr(L3, "<=", Y[j,k] + 1)
 
     # Contrainte 4
+    # Un sommet i connait soit des voisins déjà représentants, 
+    # soit il devient représentant
     for i in range(n):
         model.addConstr(X[i] + quicksum(Y[i,j] for j in range (i-1)), ">=", 1)
 
+    '''
+    for i in range(n):
+        for j in range (n):
+            A[i,j]=(1-Y[i,j])*cij[i][j]
+    '''
     # Update      
     model.update()
 
 def plne(graph, k):
     cij = weightMatrix(graph)
     defineObjf(cij, graph)
-    defineConstraints(graph,k)
+    defineConstraints(cij,graph,k)
     model.optimize()
     print "X[i]:", X
     print "Y[i,j]:", Y[1,3]
