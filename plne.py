@@ -68,7 +68,7 @@ def defineObjf(cij, graph):
     for i in range(1,n+1):
         X[i] = model.addVar(vtype=GRB.BINARY, name="X_"+str(i), obj=0)
     
-    for i in range(1,n+1):
+    for i in range(1,n):
         for j in range(i+1,n+1):
             Y[i,j] = model.addVar(vtype=GRB.BINARY, name="Y"+str(i)+"_"+str(j), obj=-cij[i-1][j-1])
             Y[j,i] = Y[i,j]
