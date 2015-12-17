@@ -61,23 +61,28 @@ def defineObjf(cij, graph):
     Y = {}
     
     #A
-    global A
-    Y = {}
+    #global A
+   # A = {}
     
     # Variable model Gurobi
     global model 
     model = Model('partitioning')
     
     for i in range(n):
-        X[i] = model.addVar(vtype=GRB.BINARY, name="X"+str(i), obj=0)
-        for j in range(i+1):
-            A[i,j] = model.addVar(vtype=GRB.BINARY, name="A"+str(i)+str(j), obj=cij[i][j])
-            A[j,i] = A[i,j]
-            Y[i,j] = model.addVar(vtype=GRB.BINARY, name="Y"+str(i)+str(j), obj=0)
+        X[i] = model.addVar(vtype=GRB.BINARY, name="X_"+str(i), obj=0)
+    
+    for i in range(n-1):
+        for j in range(i,n):
+            #A[i,j] = model.addVar(vtype=GRB.BINARY, name="A"+str(i)+str(j), obj=cij[i][j])
+            #A[j,i] = A[i,j]
+            Y[i,j] = model.addVar(vtype=GRB.BINARY, name="Y"+str(i)+"_"+str(j), obj=-cij[i][j])
             Y[j,i] = Y[i,j]
+            print i,j
     model.modelSense = GRB.MINIMIZE
     #model.modelSense = GRB.MAXIMIZE
     model.update()
+    #model.setObjective(quicksum(quicksum(cij[i][j]*(1-Y[i,j]) for j in range(i+1,n)) for i in range (n-1)),GRB.MINIMIZE)
+    #model.update()
 
 '''
 Contraintes : 
@@ -94,9 +99,10 @@ def defineConstraints(cij, graph, k):
     # Contrainte 1
     # Un sommet i représentant d'une partition ne peut pas avoir de sommet j voisin en-dessous de lui
     for i in range(n):
-        for j in range (i-1):
-            L1 = LinExpr([1,1], [X[i], Y[i,j]])
+        for j in range (i):
+            L1 = LinExpr(X[i]+Y[i,j])
             model.addConstr(L1, "<=", 1)
+            #model.addConstr(L1, GRB.LESS_EQUAL, 1, "c1")
     
     # Contrainte 2
     # Le nombre de partitions est égal au nombre de représentants
@@ -107,37 +113,43 @@ def defineConstraints(cij, graph, k):
     # Si i est dans une partition avec j et k, 
     # alors j et k sont aussi dans une même partition
     for i in range(n):
-        for j in range (i, n):
-            for k in range (j, n):
-                L3 = LinExpr([1,1], [Y[i,j], Y[i,k]])
-                model.addConstr(L3, "<=", Y[j,k] + 1)
+        for j in range (n):
+            if j != i:
+                for k in range (n):
+                    if k!=j and k!=i:
+                        L3a = LinExpr([1,1], [Y[i,j], Y[i,k]])
+                        L3a.addConstant(-1)
+                        L3b = LinExpr([1],[Y[j,k]])
+                        model.addConstr(L3a, "<=", L3b)
+                        #model.addConstr(L3, "<=", Y[j,k] + 1)
 
     # Contrainte 4
     # Un sommet i connait soit des voisins déjà représentants, 
     # soit il devient représentant
     for i in range(n):
+        #model.addConstr(X[i] + quicksum(Y[i,j] for j in range (i)),GRB.GREATER_EQUAL,1,"c4")
         model.addConstr(X[i] + quicksum(Y[i,j] for j in range (i-1)), ">=", 1)
 
-    '''
-    for i in range(n):
-        for j in range (n):
-            A[i,j]=(1-Y[i,j])*cij[i][j]
-    '''
     # Update      
     model.update()
 
 def plne(graph, k):
     cij = weightMatrix(graph)
+    a=0
+    n=22
+    for i in range(n-1):
+        for j in range(i,n):
+            if cij[i][j] == 1:
+                a += 1
+    print "a=",a
     defineObjf(cij, graph)
     defineConstraints(cij,graph,k)
     model.optimize()
     print "X[i]:", X
-    print "Y[i,j]:", Y[1,3]
+    '''
     for i in range(graph.number_of_nodes()):
-        if Y[2,i] == 1:
-            print i
-        if Y[i,2] == 1:
-            print i 
+        if Y[1,i] == 1:
+            print i'''
     s = model.status
     if s == GRB.Status.UNBOUNDED:
         print "Model cannot be solved because it is unbounded"
@@ -150,8 +162,8 @@ def plne(graph, k):
         #exit(0) 
 
 def main():
-    #copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
-    copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
+    copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
+    #copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
     graph = s.createGraph(copyFilename)
     plne(graph, 2)
 
