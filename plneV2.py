@@ -53,13 +53,17 @@ def weightMatrix(graph):
 def defineObjf(cij, graph):
     n = graph.number_of_nodes()
     
-    # Variable Xi
+    #X : Variable Xi
     global X
     X = {}
     
     #Y : Variable Xij
     global Y
     Y = {}
+    
+    #Z : Variable Zij
+    global Z 
+    Z = {}
     
     # Variable model Gurobi
     global model 
@@ -70,13 +74,15 @@ def defineObjf(cij, graph):
     
     for i in range(1,n):
         for j in range(i+1,n+1):
-            Y[i,j] = model.addVar(vtype=GRB.BINARY, name="Y"+str(i)+"_"+str(j), obj=-cij[i-1][j-1])
+            Y[i,j] = model.addVar(vtype=GRB.CONTINUOUS, name="Y"+str(i)+"_"+str(j), obj=-cij[i-1][j-1])
             Y[j,i] = Y[i,j]
+
+    for j in range(1,n+1):
+        for i in range(1,j):
+            Z[i,j] = model.addVar(vtype=GRB.BINARY, name="Z_"+str(i)+"_"+str(j), obj=0)
+            
     model.modelSense = GRB.MINIMIZE
-    #model.modelSense = GRB.MAXIMIZE
     model.update()
-    #model.setObjective(quicksum(quicksum(cij[i][j]*(1-Y[i,j]) for j in range(i+1,n)) for i in range (n-1)),GRB.MINIMIZE)
-    #model.update()
 
 
 def defineConstraints(cij, graph, k):
@@ -84,7 +90,13 @@ def defineConstraints(cij, graph, k):
     
     # Le nombre de partitions est égal au nombre de représentants
     model.addConstr(quicksum(X[i] for i in range (1,n+1)) == k)
-        
+
+    # Relaxation linéraire sur les Yij
+    for i in range(1,n+1):   
+        for j in range (1,i):
+            model.addConstr(Y[i,j], "<=", 1)
+            model.addConstr(Y[i,j], ">=", 0)
+
     # Inégalité triangulaire 
     # Si i est dans une partition avec j et k, 
     # alors j et k sont aussi dans une même partition
@@ -97,8 +109,8 @@ def defineConstraints(cij, graph, k):
                         L3a.addConstant(-1)
                         L3b = LinExpr([1],[Y[j,k]])
                         model.addConstr(L3a, "<=", L3b)
-                        #model.addConstr(L3, "<=", Y[j,k] + 1)
-                        
+    '''
+    V1 : 
     # Un sommet i connait soit des voisins déjà représentants, 
     # soit il devient représentant
     for i in range(1,n+1):
@@ -107,7 +119,17 @@ def defineConstraints(cij, graph, k):
         for j in range (1,i):
             L1 = LinExpr(X[i]+Y[i,j])
             model.addConstr(L1, "<=", 1)
-      
+    '''
+    #V2 : Linéarisation des contraintes concernant le représentant d'une partition
+    for j in range(1,n+1):
+        model.addConstr(X[j] + quicksum(Z[i,j] for i in range (1,j) ) == 1)
+    
+    for j in range(1,n+1):
+        for i in range(1,j):
+            model.addConstr(Z[i,j], "<=", X[i])
+            model.addConstr(Z[i,j], "<=", Y[i,j])
+            model.addConstr(Z[i,j], ">=", X[i] + Y[i,j] -1)
+    
     model.update()
 
 def plne(graph, k):
@@ -132,8 +154,8 @@ def plne(graph, k):
         #exit(0) 
 
 def main():
-    copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
-    #copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
+    #copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
+    copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
     graph = s.createGraph(copyFilename)
     plne(graph, 2)
     
