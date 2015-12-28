@@ -65,11 +65,11 @@ def defineObjf(cij, graph):
     global Z 
     Z = {}
     
-    #Min : Variable Min
+    #Min : Taille min des partitions
     global Min
     Min = {}
     
-    #Max : Variable Max
+    #Max : Taille max des partitions
     global Max
     Max = {}    
     
@@ -147,16 +147,23 @@ def defineConstraints(cij, graph, k, opt, val):
         # La différence de taille maximale 
         # entre la plus petite et la plus grande partition est de <val>
         for i in range (1,n+1):
+            # Inégalité 1 et 2 :
             model.addConstr(Min <= X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1))
+            # Inégalité 7 et 8
             model.addConstr(X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) <= n)
 
         for i in range (1,n):
+            # Inégalité 3
             model.addConstr(X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) 
             <= X[i+1] + quicksum(Y[i+1,j] for j in range(i+2, n+1) if X[i+1] == 1) + n*W)
+
+            # Inégalité 4
             model.addConstr(X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) 
             <= X[i+1] + quicksum(Y[i+1,j] for j in range(i+2, n+1) if X[i+1] == 1) + n*(1-W))
-            model.addConstr(Z >= (1-W)*(X[i+1] + quicksum(Y[i+1,j] for j in range(i+2, n+1) if X[i+1] == 1))
-                            + W*(X[i+1] + quicksum(Y[i+1,j] for j in range(i+2, n+1) if X[i+1] == 1)))
+
+            # Inégalité 5
+            #model.addConstr(Z >= (1-W)*(X[i+1] + quicksum(Y[i+1,j] for j in range(i+2, n+1) if X[i+1] == 1))
+            #               + W*(X[i+1] + quicksum(Y[i+1,j] for j in range(i+2, n+1) if X[i+1] == 1)))
     else:
         print "Parameter opt should be {0,1}"
         exit(0)
