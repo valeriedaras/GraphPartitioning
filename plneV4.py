@@ -68,7 +68,7 @@ def defineObjf(cij, graph,k):
         for i in range(1,j):
             Z[i,j] = model.addVar(vtype=GRB.BINARY, name="Z_"+str(i)+"_"+str(j), obj=0)
     
-    '''    
+  
     for i in range(1,n):
         for j in range(i+1,n+1):
             W[i,j] = model.addVar(vtype=GRB.INTEGER, name="W_"+str(i)+"_"+str(j), obj=0)
@@ -90,7 +90,7 @@ def defineObjf(cij, graph,k):
             A2[j,i] = A2[i,j]
             B[i,j] = model.addVar(vtype=GRB.BINARY, name="B_"+str(i)+"_"+str(j), obj=0)
             B[j,i] = B[i,j]
-    
+    '''      
     
     model.modelSense = GRB.MINIMIZE
     model.update()
@@ -142,11 +142,11 @@ def defineConstraints(cij, graph, k, opt, val):
     elif opt == 1:
         # La différence de taille maximale 
         # entre la plus petite et la plus grande partition est de <val>
-        '''        
+            
         for a in range (1,n):
             for b in range (a+1,n+1):
-                model.addConstr((X[a]+quicksum(Y[a,j] for j in range(a+1, n+1) if X[a] == 1)
-                       - X[b]+quicksum(Y[b,j] for j in range(b+1, n+1) if X[b] == 1)),
+                model.addConstr((quicksum(Y[a,j] for j in range(a+1, n+1) if X[a] == 1 and X[b] == 1)
+                       - quicksum(Y[b,j] for j in range(b+1, n+1) if X[a] == 1 and X[b] == 1)),
                        "==", A1[a,b] - A2[a,b])
                 model.addConstr(A1[a,b], ">=", 0)
                 model.addConstr(A1[a,b], "<=", B[a,b]*n)
@@ -157,20 +157,20 @@ def defineConstraints(cij, graph, k, opt, val):
         '''
         for q1 in range (1,k):
             for q2 in range (q1+1,k+1):
-                '''
+
                 for a in range (1,n):
                     for b in range (a+1,n+1):
                         model.addConstr((quicksum(Y[a,j] for j in range(a+1, n+1) if X[a] == 1 and X[b] == 1)) 
                             - quicksum(Y[b,j] for j in range(b+1, n+1) if X[a] == 1 and X[b] == 1),
                             "==", A1[q1,q2] - A2[q1,q2])
-                '''
+
                 model.addConstr(A1[q1,q2], ">=", 0)
                 model.addConstr(A1[q1,q2], "<=", B[q1,q2]*n)
                 model.addConstr(A2[q1,q2], ">=", 0)
                 model.addConstr(A2[q1,q2], "<=", (1-B[q1,q2])*n)
                 model.addConstr(W[q1,q2], "==",  A1[q1,q2] + A2[q1,q2])
                 model.addConstr(W[q1,q2], "<=", val)
-
+        '''
     else:
         print "Parameter opt should be {0,1}"
         exit(0)
@@ -193,10 +193,10 @@ def displayPartitions(n,k):
 # @n : nombre de sommets
 # @k : nombre de partitions
 def displaySizeDifference(n,k):    
-    for i in range(1,k+1):
-        print "Partition",i
-        for j in range (i+1,k+1):
-            print "avec partition",j,":",model.getVarByName("W_"+str(i)+"_"+str(j)).getAttr('X')
+    for i in range(1,n+1):
+        print "Sommet",i
+        for j in range (i+1,n+1):
+            print "avec Sommet",j,":",model.getVarByName("W_"+str(i)+"_"+str(j)).getAttr('X')
 
 
 
