@@ -145,15 +145,16 @@ def defineConstraints(cij, graph, k, opt, val):
             
         for a in range (1,n):
             for b in range (a+1,n+1):
-                model.addConstr((quicksum(Y[a,j] for j in range(a+1, n+1) if X[a] == 1 and X[b] == 1)
-                       - quicksum(Y[b,j] for j in range(b+1, n+1) if X[a] == 1 and X[b] == 1)),
-                       "==", A1[a,b] - A2[a,b])
+                abs1 = LinExpr(quicksum(Y[a,j] for j in range(a+1, n+1) if X[a] == 1 and X[b] == 1))
+                abs2 = LinExpr(quicksum(Y[b,j] for j in range(b+1, n+1) if X[a] == 1 and X[b] == 1))
+                model.addConstr(abs1 - abs2, "==", A1[a,b] - A2[a,b])
+
                 model.addConstr(A1[a,b], ">=", 0)
                 model.addConstr(A1[a,b], "<=", B[a,b]*n)
                 model.addConstr(A2[a,b], ">=", 0)
                 model.addConstr(A2[a,b], "<=", (1-B[a,b])*n)
                 model.addConstr(W[a,b], "==",  A1[a,b] + A2[a,b])
-                #model.addConstr(W[a,b], "<=", val)
+                model.addConstr(W[a,b], "<=", val)
         '''
         for q1 in range (1,k):
             for q2 in range (q1+1,k+1):
@@ -237,7 +238,7 @@ def plne(graph,k, opt, val):
 def main():
     copyFilename = "unitEx.graph"
     graph = s.createGraph(copyFilename)
-    plne(graph, 2, 1, 2)
+    plne(graph, 2, 1, 10)
     
 
 if __name__ == '__main__':
