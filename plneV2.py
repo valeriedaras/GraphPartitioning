@@ -112,6 +112,17 @@ def defineConstraints(cij, graph, k):
             model.addConstr(Y[i,j], ">=", 0)
 
 
+# Fonction permettant d'afficher la solution du problème
+# @n : nombre de sommets
+# @k : nombre de partitions
+def displayPartitions(n,k):    
+    for i in range(1,n+1):
+        if model.getVarByName("X_"+str(i)).getAttr('X') == 1:
+            print "Partiton avec representant",i,":"
+            for j in range(i+1,n+1):
+                if model.getVarByName("Y_"+str(i)+"_"+str(j)).getAttr('X') > 0:
+                    print j
+
 
 # Fonction permettant d'initialiser le problème et de lancer sa résolution
 # @graph : graphe à étudier
