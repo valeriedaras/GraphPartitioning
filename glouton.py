@@ -108,18 +108,14 @@ def glouton(k, graph):
     # à tout le graphe mais sans le return il vaut une partition...
     return partitionList, graph
 
-
-            
-
-    
         
 def main():
-    #copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
-    copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
+    copyFilename = "unitEx.graph"
     graph = s.createGraph(copyFilename)
-    glouton(3,graph)
+    pList, graph = glouton(3,graph)
+    print pList
 
-def main2():
+def testremoveMarkingNodes():
     theList = [(1, {'weight': 1}), (2, {'weight': 1}), (1, {'weight': 8}),(1, {'weight': 8})]
     markingList = [1]
     theList = removeMarkingNodes(theList, markingList)
