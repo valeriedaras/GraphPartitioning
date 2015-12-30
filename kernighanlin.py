@@ -169,7 +169,7 @@ def kl(graph):
                     
             # Mise a jour du gain global
             if (sumGains(G1Fictif,G2Fictif) > globalMax):
-                improvement = True ;
+                improvement = True 
                 globalMax = sumGains(G1Fictif,G2Fictif)
                 f1 = s1
                 f2 = s2
@@ -298,8 +298,7 @@ def kl2(graph):
     print "Partition Finale 2: ", partitionsList[1]
     
 def main():
-    #copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
-    copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
+    copyFilename = "unitEx.graph"
     graph = s.createGraph(copyFilename)
     #kl(graph)
     kl2(graph)
