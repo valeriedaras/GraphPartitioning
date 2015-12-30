@@ -114,8 +114,7 @@ def defineConstraints(cij, graph, k):
 
 # Fonction permettant d'afficher la solution du problème
 # @n : nombre de sommets
-# @k : nombre de partitions
-def displayPartitions(n,k):    
+def displayPartitions(n):    
     for i in range(1,n+1):
         if model.getVarByName("X_"+str(i)).getAttr('X') == 1:
             print "Partiton avec representant",i,":"
@@ -149,7 +148,7 @@ def plne(graph,k):
         print "The optimal objective is %g" % model.objVal
         n = graph.number_of_nodes()
         # Affichage de la solution
-        displayPartitions(n,k)
+        displayPartitions(n)
     if s == GRB.Status.INF_OR_UNBD and s != GRB.Status.INFEASIBLE:
         print "Optimization was stopped with status %d" % s
 

@@ -35,23 +35,26 @@ def defineObjf(cij, graph):
     #Z : Variable Zij
     global Z 
     Z = {}
-    
-    #Min : Taille min des partitions
-    global Min
-    Min = {}
-    
-    #Max : Taille max des partitions
-    global Max
-    Max = {}    
-    
-    #W : Variable W
-    global W
-    W = {}
+  
+    #W : Variable Wij
+    global W 
+    W = {} 
 
-    global ProdWX
-    ProdWX = {}    
-    global ProdYW
-    ProdWY = {}
+    #A1 : Variable A1
+    global A1
+    A1 = {}  
+
+    #A2 : Variable A2
+    global A2
+    A2 = {}
+    
+    #B : Variable B
+    global B
+    B = {} 
+
+    #XX : Variable XX
+    global XX
+    XX = {}    
     
     # Variable model Gurobi
     global model 
@@ -69,17 +72,20 @@ def defineObjf(cij, graph):
         for i in range(1,j):
             Z[i,j] = model.addVar(vtype=GRB.BINARY, name="Z_"+str(i)+"_"+str(j), obj=0)
     
+  
     for i in range(1,n):
         for j in range(i+1,n+1):
-            W[i,j] = model.addVar(vtype=GRB.BINARY, name="W_"+str(i)+"_"+str(j), obj=0)
+            W[i,j] = model.addVar(vtype=GRB.INTEGER, name="W_"+str(i)+"_"+str(j), obj=0)
             W[j,i] = W[i,j]
-
-    for i in range(1,n+1):
-        ProdWX[i] = model.addVar(vtype=GRB.BINARY, name="ProdW_"+str(i), obj=0)
-        #ProdYW[i] = model.addVar(vtype=GRB.INTEGER, name="ProdYW_"+str(i), obj=0)
-
-    #Max = model.addVar(vtype=GRB.INTEGER, name="Max", obj=0)      
-    Min = model.addVar(vtype=GRB.INTEGER, name="Min", obj=0)
+            A1[i,j] = model.addVar(vtype=GRB.INTEGER, name="A1_"+str(i)+"_"+str(j), obj=0)
+            A1[j,i] = A1[i,j]
+            A2[i,j] = model.addVar(vtype=GRB.INTEGER, name="A2_"+str(i)+"_"+str(j), obj=0)
+            A2[j,i] = A2[i,j]
+            B[i,j] = model.addVar(vtype=GRB.BINARY, name="B_"+str(i)+"_"+str(j), obj=0)
+            B[j,i] = B[i,j]
+            XX[i,j] = model.addVar(vtype=GRB.BINARY, name="XX_"+str(i)+"_"+str(j), obj=0)
+            XX[j,i] = XX[i,j]
+    
     
     model.modelSense = GRB.MINIMIZE
     model.update()
@@ -103,11 +109,11 @@ def defineConstraints(cij, graph, k, opt, val):
     for i in range(1,n+1):
         for j in range (1,n+1):
             if j != i:
-                for k in range (1,n+1):
-                    if k!=j and k!=i:
-                        L3a = LinExpr([1,1], [Y[i,j], Y[i,k]])
+                for h in range (1,n+1):
+                    if h!=j and h!=i:
+                        L3a = LinExpr([1,1], [Y[i,j], Y[i,h]])
                         L3a.addConstant(-1)
-                        L3b = LinExpr([1],[Y[j,k]])
+                        L3b = LinExpr([1],[Y[j,h]])
                         model.addConstr(L3a, "<=", L3b)
 
     #V2 : Linéarisation des contraintes concernant le représentant d'une partition
@@ -126,40 +132,40 @@ def defineConstraints(cij, graph, k, opt, val):
         # La taille maximale correspond au cardinal de l'ensemble formé par : 
         # un représentant + tous les sommets qui ont ce même représentant
         for i in range (1,n+1):
-            model.addConstr(X[i]+quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) <= val)
+            model.addConstr(X[i]+quicksum(Y[i,j] for j in range(i+1, n+1)) <= val)
             
     elif opt == 1:
         # La différence de taille maximale 
         # entre la plus petite et la plus grande partition est de <val>
-        for i in range (1,n+1):
-            # Inégalité 1 et 2 :
-            model.addConstr(Min <= X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1))
-            # Inégalité 7 et 8 : peut être inutile/redondant
-            model.addConstr(X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) <= n)
-        
-        for i in range (1,n):
-            # Inégalité 3
-            model.addConstr(X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) 
-            <= X[i+1] + quicksum(Y[i+1,j] for j in range(i+2, n+1) if X[i+1] == 1) + n*W[i,i+1])
-        
-        for i in range (1,n):
-            # Inégalité 4
-            model.addConstr(X[i+1] + quicksum(Y[i+1,j] for j in range(i+2, n+1) if X[i+1] == 1) 
-            <= X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) + n*(1-W[i,i+1]))
-        
-        # Inégalité 5 : Linéarisation du produit
-        for i in range(1,n):
-            model.addConstr(ProdWX[i], "<=", n*W[i,i+1])
-            model.addConstr(ProdWX[i], "<=", X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1))
-            model.addConstr(ProdWX[i], ">=", X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) -n*(1-W[i,i+1]))
-            model.addConstr(Min, ">=", X[i] + quicksum(Y[i,j] for j in range(i+1, n+1) if X[i] == 1) 
-                                        -ProdWX[i] + ProdWX[i+1])
-        '''    
-        for i in range(1,n):
             
-            
-            
-        '''
+        for a in range (1,n):
+            for b in range (a+1,n+1):
+                # Contraintes pour le produit XX[a,b]=X[a]*X[b]
+                model.addConstr(XX[a,b], "<=", X[a])
+                model.addConstr(XX[a,b], "<=", X[b])
+                model.addConstr(XX[a,b], ">=", X[a] + X[b] - 1)
+                
+                # Expression linéraire pour calculer la taille de la partition 
+                # à partir du sommet a
+                abs1 = LinExpr(quicksum(Y[a,j] for j in range(a+1, n+1)))
+                
+                # Expression linéraire pour calculer la taille de la partition 
+                # à partir du sommet b
+                abs2 = LinExpr(quicksum(Y[b,j] for j in range(b+1, n+1)))
+                
+                # Contraintes pour la valeur absolue de la différence de taille
+                # Le facteur XX[a,b] permet d'assurer que 
+                # les deux sommets a et b sont des représentants
+                model.addConstr(XX[a,b]*(abs1 - abs2), "==", A1[a,b] - A2[a,b])
+
+                # Contraintes pour la valeur absolue
+                model.addConstr(A1[a,b], ">=", 0)
+                model.addConstr(A1[a,b], "<=", B[a,b]*n)
+                model.addConstr(A2[a,b], ">=", 0)
+                model.addConstr(A2[a,b], "<=", (1-B[a,b])*n)
+                model.addConstr(W[a,b], "==",  A1[a,b] + A2[a,b])
+                model.addConstr(W[a,b], "<=", val)
+
     else:
         print "Parameter opt should be {0,1}"
         exit(0)
@@ -169,14 +175,21 @@ def defineConstraints(cij, graph, k, opt, val):
 
 # Fonction permettant d'afficher la solution du problème
 # @n : nombre de sommets
-# @k : nombre de partitions
-def displayPartitions(n,k):    
+def displayPartitions(n):    
     for i in range(1,n+1):
-        if model.getVarByName("X_"+str(i)).getAttr('X') == 1:
+        if model.getVarByName("X_"+str(i)).getAttr('X') > 0:
             print "Partiton avec representant",i,":"
             for j in range(i+1,n+1):
                 if model.getVarByName("Y_"+str(i)+"_"+str(j)).getAttr('X') > 0:
                     print j
+
+# Fonction permettant d'afficher la solution du problème
+# @n : nombre de sommets
+def displaySizeDifference(n):    
+    for i in range(1,n+1):
+        for j in range (i+1,n+1):
+            print "W_",i,"_",j,":",model.getVarByName("W_"+str(i)+"_"+str(j)).getAttr('X')
+
 
 
 # Fonction permettant d'initialiser le problème et de lancer sa résolution
@@ -185,13 +198,13 @@ def displayPartitions(n,k):
 # @opt et @val: si opt=0 alors val représente le nombre max de sommets dans une partition
 # si opt=1, alors val représente la différence max de nombre de sommets
 # entre la plus grande partition et la plus petite partiton
-def plne(graph,k, opt, val):
+def plne(graph, k, opt, val):
     
     # Calcul de la représentation matricielle du graphe
     cij = weightMatrix(graph)
 
     # Définition des variables et de la fonction objectif
-    defineObjf(cij, graph) 
+    defineObjf(cij,graph) 
 
     # Définition des contraintes
     defineConstraints(cij,graph,k,opt,val)
@@ -207,7 +220,9 @@ def plne(graph,k, opt, val):
         print "The optimal objective is %g" % model.objVal
         n = graph.number_of_nodes()
         # Affichage de la solution
-        displayPartitions(n,k)
+        displayPartitions(n)
+        if opt == 1:
+            displaySizeDifference(n)
     if s == GRB.Status.INF_OR_UNBD and s != GRB.Status.INFEASIBLE:
         print "Optimization was stopped with status %d" % s
 
@@ -215,7 +230,7 @@ def plne(graph,k, opt, val):
 def main():
     copyFilename = "unitEx.graph"
     graph = s.createGraph(copyFilename)
-    plne(graph, 2, 1, 22)
+    plne(graph, 3, 0, 22)
     
 
 if __name__ == '__main__':
