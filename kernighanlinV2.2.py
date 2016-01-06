@@ -8,6 +8,7 @@ import sys
 import script as s
 import glouton as g 
 import objectivefunctions as objf
+import networkx as nx
        
 
    
@@ -35,29 +36,15 @@ def setRemainingNodes(partition,exchangedNodes):
     return newPartition
 
 def calculateFictifGain(s1,s2,P1,P2,graph):
-    # échange des sommets s1 et s2
-    newP1 = list(P1)
-    newP1.remove(s1)
-    newP1.append(s2)
-    newP2 = list(P2)
-    newP2.remove(s2)
-    newP2.append(s1)
-    # newG : gain si on permute s1 et s2
-    newG = objf.calculateCut(newP1, newP2, graph)
-    return newG
+    return objf.calculateGainNodesAB(s1,s2,P1,P2,graph)
+
 
 def calculateFictifGainUnique(s,P1,P2,graph):
     # déplacement du sommet s de P1 vers P2
-    newP1 = list(P1)
-    newP2 = list(P2)
-    if s in newP1:
-        newP1.remove(s)
-        newP2.append(s)
+    if s in P1:
+        newG = objf.nodeGain(s, P1, graph)
     else :
-        newP2.remove(s)
-        newP1.append(s)
-    # newG : gain si on déplace s de P1 vers P2
-    newG = objf.calculateCut(newP1, newP2, graph)
+        newG = objf.nodeGain(s, P2, graph)
     return newG
 
 
@@ -71,28 +58,32 @@ def kl(graph):
     # Initialisation des listes de sommets à étudier 
     # (une par partition)
     remainingNodesS1 = []
-    remainingNodesS2 = []
-    
-    #  Initialisation des listes de gain fictif
-    GFictif = 0
-    
+    remainingNodesS2 = []    
     
     ## Déroulement de l'algo ##    
     # bipartition
     partitionsList, graph = g.gloutonWithCut(2,graph)
+    print "Partition Init 1: ", partitionsList[0]
+    print "Partition Init 2: ", partitionsList[1]
+    
+    ratio = 20
     
     # Mise a jour des listes des sommets à étudier
-    remainingNodesS1 = list(partitionsList[0])
-    remainingNodesS2 = list(partitionsList[1])
-    print "Partition Init 1: ", remainingNodesS1
-    print "Partition Init 2: ", remainingNodesS2
+    remainingNodesS1 = list(partitionsList[0])[len(partitionsList[0])*(100-ratio)/100:]
+    remainingNodesS2 = list(partitionsList[1])[len(partitionsList[1])*(100-ratio)/100:]
+    
     
     optimumEqu = False
     # boucle principale
 
     # calcul du gain global initial
     globalMin = objf.calculateCut(remainingNodesS1,remainingNodesS2,graph)
+    #  Initialisation du gain fictif
+    GainGlobalFictif = globalMin
     print "Global Min Initial:", globalMin
+
+    print "Remaining Init 1: ", remainingNodesS1
+    print "Remaining Init 2: ", remainingNodesS2
 
     while remainingNodesS1 != [] and remainingNodesS2 != [] and not optimumEqu:
         improvement = False
@@ -111,19 +102,21 @@ def kl(graph):
                 # on cherche le meilleur candidat pour un échange avec s1
                 # Calcul du gain lié à l'échange de a et b : G(a,b)
                 gainAB = calculateFictifGain(s1, nodeB, P1, P2, graph)
+                #print "Gain between", s1, nodeB, ":",gainAB              
                 
-                if gainAB < localMin:
+                if gainAB < localMin  and gainAB > 0 :
                     localMin = gainAB
                     # s2 : sommet candidat de S2 pour un échange avec s1
                     s2 = nodeB
                     print "Nouveau gain local:", localMin, "Nodes: ", s1, s2
-                    GFictif = gainAB
+                    GainGlobalFictif = globalMin - gainAB
+                    print "Gain Global Fictif =", GainGlobalFictif
                 
                     
             # Mise a jour du gain global
-            if (GFictif < globalMin):
+            if (GainGlobalFictif < globalMin):
                 improvement = True
-                globalMin = GFictif
+                globalMin = GainGlobalFictif
                 print "Nouveau gain global:", globalMin, "Nodes:", s1, s2
                 exchangedNodes.append(s1)
                 exchangedNodes.append(s2)
@@ -131,14 +124,12 @@ def kl(graph):
                 # P ← échanger les sommets s1 et s2
                 print "Les noeuds",s1,"et",s2, "ont été échangés"
                 partitionsList = switchNodes(partitionsList,s1,s2)
-                print "Partition 1:", partitionsList[0]
-                print "Partition 2:", partitionsList[1]
                 
                 # Mise a jour des listes des sommets à étudier
                 remainingNodesS1 = setRemainingNodes(partitionsList[0],exchangedNodes)
                 remainingNodesS2 = setRemainingNodes(partitionsList[1],exchangedNodes)
 
-  
+
         if (improvement == False):
             print "Optimum équilibré trouvé!"
             print "Global cut:", objf.calculateCut(partitionsList[0], partitionsList[1], graph)
@@ -147,27 +138,36 @@ def kl(graph):
     print ""
     print "Recherche de sommets uniques à changer..."   
    
-    while exchangedNodes != [] :
+    nodesList = nx.nodes(graph)
+    iterations = 100
+    while iterations > 0 :
+        improvement = False
         localMin = sys.maxint
         
-        for node in exchangedNodes:
+        for node in nodesList:
             gain = calculateFictifGainUnique(node, partitionsList[0], partitionsList[1], graph)
-
+            
             # recherche du meilleur gain local            
-            if gain < localMin:
+            if gain < localMin  and gain > 0 :
+                improvement = True
                 localMin = gain
                 print "Nouveau gain local:", localMin, "Node: ", node
                 s = node
-                GFictif = gain
+                GainGlobalFictif = globalMin - gain
+                print "Gain Global Fictif =", GainGlobalFictif
 
-        exchangedNodes.remove(s)        
-        if (GFictif < globalMin):
-            globalMin = GFictif
+        if improvement :
+            nodesList.remove(s)        
+        if (GainGlobalFictif < globalMin):
+            globalMin = GainGlobalFictif
             print "Nouveau gain global:", globalMin, "Node:", s
             print "Le noeud",s,"a été échangé de partition"
             partitionsList = switchNodesUnique(partitionsList,s)
-            print "Partition 1:", partitionsList[0]
-            print "Partition 2:", partitionsList[1]
+            print "Global cut:", objf.calculateCut(partitionsList[0], partitionsList[1], graph)
+            #print "Partition 1:", partitionsList[0]
+            #print "Partition 2:", partitionsList[1]
+        
+        iterations = iterations - 1
  
     print "Partition Finale 1:", partitionsList[0]
     print "Partition Finale 2:", partitionsList[1]
@@ -175,11 +175,13 @@ def kl(graph):
     
     
 def main():
-    copyFilename = "dataUnit.graph"
-    s.copyFileUnit("data.graph",copyFilename)
-    #graph = s.createGraph(copyFilename)
+    copyFilename = "testGraph.graph"
+    #s.copyFileUnit("data.graph",copyFilename)
+    #s.copyFileUnit("add20.graph",copyFilename)
+    s.copyFileUnit("3elt.graph",copyFilename)
+    graph = s.createGraph(copyFilename)
     
-    graph = s.createGraph("unitEx.graph")
+    #graph = s.createGraph("unitEx.graph")
     kl(graph)
 
 if __name__ == '__main__':

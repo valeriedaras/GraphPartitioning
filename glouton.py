@@ -10,6 +10,7 @@ import objectivefunctions as objf
 
 # a supprimer : pour les tests 
 import script as s
+import time
 
 # calculer la liste des tailles des sous partitions 
 # se construit par appels récursifs
@@ -38,7 +39,6 @@ def nodeWithLessNeighbor(graph,markingList):
 
 def removeMarkingNodes(neighborsHeap, markingList):
     newList = []
-                
     for i in range(len(neighborsHeap)):
         a = neighborsHeap[i][0]
         b = neighborsHeap[i][1]
@@ -47,16 +47,16 @@ def removeMarkingNodes(neighborsHeap, markingList):
     return newList
     
    
-def setPotentialNodesList(graph,node, markingList, potentialNodesList):
+def setPotentialNodesList(graph,node,markingList,potentialNodesList):
     # neighborsDict est un dictionnaire contenant les voisins de node
     # ex : {17: {'weight': 4}, 10: {'weight': 7}, 11: {'weight': 3}}
     neighborsDict = graph[node]
     # dans sortedNDict, le plus petit poids est en premier
     # ex : [(11, {'weight': 3}), (17, {'weight': 4}), (10, {'weight': 7})]
-    sortedNDict = sorted(neighborsDict.items(), key=operator.itemgetter(1))
+    sortedNeightborsList = sorted(neighborsDict.items(), key=operator.itemgetter(1))
     # neighborsHeap : ajout des nouveaux voisins à l'ancienne potentialNodeList
-    neighborsHeap = sortedNDict + potentialNodesList
-    neighborsHeap.sort(key=operator.itemgetter(1))    
+    neighborsHeap = sortedNeightborsList + potentialNodesList
+    neighborsHeap.sort(key=operator.itemgetter(1))
     # on enleve les sommets qui ont déjà été marqués
     neighborsHeap = removeMarkingNodes(neighborsHeap, markingList)
     return neighborsHeap
@@ -73,16 +73,15 @@ def glouton(k, graph):
     # initialisation du sommet de départ
     s0 = nodeWithLessNeighbor(graph, markingList)
     markingList.append(s0)
-    print "sommet de depart :", s0
+    print "Sommet de depart :", s0
     potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)
-    print "potentialNodesList : ", potentialNodesList
+    print "Potential Nodes : ", potentialNodesList
     # initialisation de i : numéro de partition courante
     i = 1
     while i < k:
         # Calcul de ni : nombre de sommets pour la prochaine partition
         niList = calculateSizeListSubGraph(k, i, niList, initGraph)
         ni = niList[i-1]
-        #print ni
         # j : nombre de sommets actuellement dans la partition courante
         j=1 	# on compte le sommet de départ
         while potentialNodesList != [] and j < ni:
@@ -122,29 +121,31 @@ def gloutonWithCut(k, graph):
     # initialisation du sommet de départ
     s0 = nodeWithLessNeighbor(graph, markingList)
     markingList.append(s0)
-    print "sommet de depart :", s0
+    print "Sommet de depart :", s0
     potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)
+    print "PotentialNodesList : ", potentialNodesList
+    
     # initialisation de i : numéro de partition courante
     i = 1
     while i < k:
         # Calcul de ni : nombre de sommets pour la prochaine partition
         niList = calculateSizeListSubGraph(k, i, niList, initGraph)
         ni = niList[i-1]
-        #print ni
         # j : nombre de sommets actuellement dans la partition courante
         j=1 	# on compte le sommet de départ
         while potentialNodesList != [] and j < ni:
             minCut = sys.maxint
+            #remainingNodes = [x for x in graph.nodes() if x not in markingList]
             for node in potentialNodesList:
-                testList = list(markingList)
-                testList.append(node[0])
-                remainingNodes = [x for x in graph.nodes() if x not in testList]
-                if objf.calculateCut(testList,remainingNodes,graph) < minCut:
-                    minCut = objf.calculateCut(testList,remainingNodes,graph)
+                fictifGain = objf.nodeGain(node[0], markingList, graph)
+                if  fictifGain < minCut:
+                    minCut = fictifGain
                     minNode = node[0]
-            print "prochain noeud ajouté dans la partition :", minNode
+                    #print "Nouveau Gain Fictif : ", fictifGain, "Noeud:", minNode
+                
+            #print "prochain noeud ajouté dans la partition :", minNode
             markingList.append(minNode)
-            potentialNodesList = setPotentialNodesList(graph,minNode, markingList, potentialNodesList)
+            potentialNodesList = setPotentialNodesList(graph,minNode,markingList,potentialNodesList)
             j = j+1
         # Affectation de la partition créée à la liste de partitions
         partitionList.append(markingList)
@@ -168,11 +169,22 @@ def gloutonWithCut(k, graph):
 
         
 def main():
-    copyFilename = "unitEx.graph"
+    copyFilename = "testGraphUnit.graph"
+    #s.copyFileUnit("data.graph",copyFilename)
+    s.copyFileUnit("add20.graph",copyFilename)
+    #s.copyFileUnit("3elt.graph",copyFilename)
     graph = s.createGraph(copyFilename)
+    #graph = s.createGraph("unitEx.graph")
+    
+    startTime = time.time()
     pList, graph = gloutonWithCut(2,graph)
-    print pList
+    stopTime = time.time()
+    print "Partition 1 :", pList[0]
+    print "Partition 2 :", pList[1]
+    print "Size 1 :", len(pList[0])
+    print "Size 2 :", len(pList[1])
     print objf.calculateCut(pList[0],pList[1],graph)
+    print "Execution Time :", stopTime-startTime
 
 def testremoveMarkingNodes():
     theList = [(1, {'weight': 1}), (2, {'weight': 1}), (1, {'weight': 8}),(1, {'weight': 8})]

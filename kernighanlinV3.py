@@ -44,6 +44,7 @@ def calculateFictifGain(s1,s2,P1,P2,graph):
     newP2.append(s1)
     # newG : gain si on permute s1 et s2
     newG = objf.calculateCut(newP1, newP2, graph)
+    #newG = objf.calculateGainNodesAB(s1, s2, newP1, newP2, graph)
     return newG
 
 def calculateFictifGainUnique(s,P1,P2,graph):
@@ -79,7 +80,7 @@ def kl(graph):
     
     ## Déroulement de l'algo ##    
     # bipartition
-    partitionsList, graph = g.gloutonWithCut(2,graph)
+    partitionsList, graph = g.glouton(2,graph)
     
     # Mise a jour des listes des sommets à étudier
     remainingNodesS1 = list(partitionsList[0])
@@ -110,14 +111,16 @@ def kl(graph):
             for nodeB in reversed(remainingNodesS2):
                 # on cherche le meilleur candidat pour un échange avec s1
                 # Calcul du gain lié à l'échange de a et b : G(a,b)
-                gainAB = calculateFictifGain(s1, nodeB, P1, P2, graph)
-                
-                if gainAB < localMin:
-                    localMin = gainAB
+                #gainAB = calculateFictifGain(s1, nodeB, P1, P2, graph)
+                gainAB = objf.calculateGainNodesAB(s1, nodeB, P1, P2, graph)
+
+                if gainAB + globalMin < localMin:
+                    localMin = gainAB + globalMin
                     # s2 : sommet candidat de S2 pour un échange avec s1
                     s2 = nodeB
                     print "Nouveau gain local:", localMin, "Nodes: ", s1, s2
-                    GFictif = gainAB
+                    #GFictif = gainAB
+                    GFictif = localMin
                 
                     
             # Mise a jour du gain global
@@ -178,7 +181,6 @@ def main():
     copyFilename = "dataUnit.graph"
     s.copyFileUnit("data.graph",copyFilename)
     #graph = s.createGraph(copyFilename)
-    
     graph = s.createGraph("unitEx.graph")
     kl(graph)
 

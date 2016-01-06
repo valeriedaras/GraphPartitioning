@@ -107,8 +107,8 @@ def getNumberOfNodes(graph):
 ### MAIN ###
 
 def main():
-	copyFile(filename,copyFilename)	
-	createGraph(copyFilename)
+	copyFile("data.graph","dataUnit.graph")	
+	createGraph("dataUnit.graph")
 
 
 if __name__ == '__main__':

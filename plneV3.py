@@ -230,7 +230,7 @@ def plne(graph, k, opt, val):
 def main():
     copyFilename = "unitEx.graph"
     graph = s.createGraph(copyFilename)
-    plne(graph, 3, 0, 22)
+    plne(graph, 3, 0, 11)
     
 
 if __name__ == '__main__':
