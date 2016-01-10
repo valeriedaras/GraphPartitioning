@@ -14,7 +14,7 @@ class TestObjFunctions(unittest.TestCase):
         # init : creation of json conf file
         # in this test, the config file does not contain json data
         try:
-            copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/ex2.graph"
+            copyFilename = "graphs/ex2.graph"
             graph = s.createGraph(copyFilename)
         except Exception:
             self.fail("Error during graph creation")

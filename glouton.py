@@ -169,12 +169,12 @@ def gloutonWithCut(k, graph):
 
         
 def main():
-    copyFilename = "testGraphUnit.graph"
-    #s.copyFileUnit("data.graph",copyFilename)
-    s.copyFileUnit("add20.graph",copyFilename)
-    #s.copyFileUnit("3elt.graph",copyFilename)
+    copyFilename = "graphs/testGraphUnit.graph"
+    #s.copyFileUnit("graphs/data.graph",copyFilename)
+    s.copyFileUnit("graphs/add20.graph",copyFilename)
+    #s.copyFileUnit("graphs/3elt.graph",copyFilename)
     graph = s.createGraph(copyFilename)
-    #graph = s.createGraph("unitEx.graph")
+    #graph = s.createGraph("graphs/unitEx.graph")
     
     startTime = time.time()
     pList, graph = gloutonWithCut(2,graph)

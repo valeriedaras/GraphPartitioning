@@ -136,8 +136,7 @@ def plne(graph,k):
 
 
 def main():
-    #copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/unitEx.graph"
-    copyFilename = "/Users/valeriedaras/Documents/INSA/5IL/DataMining/workspace/GraphPartitioning/unitEx.graph"
+    copyFilename = "graphs/unitEx.graph"
     graph = s.createGraph(copyFilename)
     plne(graph, 2)
     

@@ -169,8 +169,6 @@ def kl(graph):
             print "Nouveau gain global:", globalMin, "Node:", s
             print "Le noeud",s,"a été échangé de partition"
             partitionsList = switchNodesUnique(partitionsList,s)
-            print "Partition 1:", partitionsList[0]
-            print "Partition 2:", partitionsList[1]
  
     print "Partition Finale 1:", partitionsList[0]
     print "Partition Finale 2:", partitionsList[1]
@@ -178,10 +176,10 @@ def kl(graph):
     
     
 def main():
-    copyFilename = "dataUnit.graph"
-    s.copyFileUnit("data.graph",copyFilename)
+    copyFilename = "graphs/dataUnit.graph"
+    s.copyFileUnit("graphs/data.graph",copyFilename)
     #graph = s.createGraph(copyFilename)
-    graph = s.createGraph("unitEx.graph")
+    graph = s.createGraph("graphs/unitEx.graph")
     kl(graph)
 
 if __name__ == '__main__':

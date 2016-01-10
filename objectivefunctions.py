@@ -58,7 +58,7 @@ def calculateGainAB(gainA,gainB,epsilon):
 
 def calculateGainNodesAB(nodeA,nodeB,PA,PB,graph):
     gainA = nodeGain(nodeA,PA,graph)
-    gainB= nodeGain(nodeB,PB,graph)
+    gainB = nodeGain(nodeB,PB,graph)
     return gainA + gainB - 2 * calculateWeight(nodeA,nodeB,graph)
     
 def sumGains(G1,G2):

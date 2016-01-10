@@ -228,7 +228,7 @@ def plne(graph, k, opt, val):
 
 
 def main():
-    copyFilename = "unitEx.graph"
+    copyFilename = "graphs/unitEx.graph"
     graph = s.createGraph(copyFilename)
     plne(graph, 3, 0, 11)
     

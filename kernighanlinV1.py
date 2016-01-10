@@ -128,7 +128,7 @@ def kl(graph):
     print "Partition Finale 2: ", partitionsList[1]
     
 def main():
-    copyFilename = "unitEx.graph"
+    copyFilename = "graphs/unitEx.graph"
     graph = s.createGraph(copyFilename)
     kl(graph)
 
