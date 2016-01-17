@@ -16,8 +16,8 @@ def main():
     verbose = False
     # Choose a graph to test
     
-    graph = getTestGraph()
-    #graph = getGraph3elt()
+    #graph = getTestGraph()
+    graph = getGraph3elt()
     #graph = getGraphAdd20()
     #graph = getGraphData()
     
@@ -29,7 +29,7 @@ def main():
     #gloutonV2(2,graph,verbose)
     #kernighanLinV1(graph,verbose)
     #kernighanLinV2(graph,verbose)
-    recuitSimule(graph,10000, 1000, 10, verbose)
+    recuitSimule(graph, 10000, 1000, 30, verbose)
     
     
 

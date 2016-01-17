@@ -245,7 +245,8 @@ def recuitSimule(graph, iterations, tempI, remonteeMax,verbose):
         
         # cas où la remontee de temperature n'a que fait dégrader la solution
         if remontee == remonteeMax and not change :
-            print "Degradation trop élevée --> récupération des anciennes partitions"
+            if verbose:
+                print "Degradation trop élevée --> récupération des anciennes partitions"
             # récupération de la meilleure partition
             partitionsList[0] = list(P1Final)
             partitionsList[1] = list(P2Final)
