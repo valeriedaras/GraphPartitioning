@@ -93,10 +93,3 @@ def calculateCutPk(pk,graph):
         for p2 in range(p1+1, len(pk)):
             result = result + calculateCut(p1,p2,graph)
     return result 
-
-
-# a tester    
-def calculateRatioCut(pk,graph):
-    result = 0
-    ## TODO
-    return result 
