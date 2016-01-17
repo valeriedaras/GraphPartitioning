@@ -11,11 +11,6 @@ import matplotlib.pyplot as plt
 
 import objectivefunctions as objf
 
-#filename = "/home/jriviere/Bureau/OC/add20.graph"
-#copyFilename = "/home/jriviere/Bureau/OC/add200.graph"
-
-filename = "/Users/User/Documents/GitHub/GraphPartitioning/add20.graph"
-copyFilename = "/Users/User/Documents/GitHub/GraphPartitioning/add200.graph"
 
 
 # copyFile prend un fichier source (.graph) et le modifie en ajoutant

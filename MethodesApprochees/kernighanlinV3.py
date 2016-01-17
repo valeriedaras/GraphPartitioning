@@ -8,6 +8,7 @@ import sys
 import script as s
 import glouton as g 
 import objectivefunctions as objf
+import time
        
 
    
@@ -44,6 +45,7 @@ def calculateFictifGain(s1,s2,P1,P2,graph):
     newP2.append(s1)
     # newG : gain si on permute s1 et s2
     newG = objf.calculateCut(newP1, newP2, graph)
+    #newG = objf.calculateGainNodesAB(s1, s2, newP1, newP2, graph)
     return newG
 
 def calculateFictifGainUnique(s,P1,P2,graph):
@@ -61,7 +63,9 @@ def calculateFictifGainUnique(s,P1,P2,graph):
     return newG
 
 
-def kl(graph):
+def kl(graph,verbose):
+    print "Starting KL version 3.."
+    startTime = time.time()
     ## Initialisation ##
 
     # Sert à mémoriser les sommets échangés
@@ -79,20 +83,23 @@ def kl(graph):
     
     ## Déroulement de l'algo ##    
     # bipartition
-    partitionsList, graph = g.gloutonWithCut(2,graph)
+    partitionsList, graph = g.glouton(2,graph,False,False)
     
     # Mise a jour des listes des sommets à étudier
     remainingNodesS1 = list(partitionsList[0])
     remainingNodesS2 = list(partitionsList[1])
-    print "Partition Init 1: ", remainingNodesS1
-    print "Partition Init 2: ", remainingNodesS2
+    if verbose: 
+        print "Partition Init 1: ", remainingNodesS1
+        print "Partition Init 2: ", remainingNodesS2
     
     optimumEqu = False
     # boucle principale
-
+    deltaTime = -time.time()
+    
     # calcul du gain global initial
     globalMin = objf.calculateCut(remainingNodesS1,remainingNodesS2,graph)
-    print "Global Min Initial:", globalMin
+    if verbose: 
+        print "Global Min Initial:", globalMin
 
     while remainingNodesS1 != [] and remainingNodesS2 != [] and not optimumEqu:
         improvement = False
@@ -110,29 +117,34 @@ def kl(graph):
             for nodeB in reversed(remainingNodesS2):
                 # on cherche le meilleur candidat pour un échange avec s1
                 # Calcul du gain lié à l'échange de a et b : G(a,b)
-                gainAB = calculateFictifGain(s1, nodeB, P1, P2, graph)
-                
-                if gainAB < localMin:
-                    localMin = gainAB
+                #gainAB = calculateFictifGain(s1, nodeB, P1, P2, graph)
+                gainAB = objf.calculateGainNodesAB(s1, nodeB, P1, P2, graph)
+
+                if gainAB + globalMin < localMin:
+                    localMin = gainAB + globalMin
                     # s2 : sommet candidat de S2 pour un échange avec s1
                     s2 = nodeB
-                    print "Nouveau gain local:", localMin, "Nodes: ", s1, s2
-                    GFictif = gainAB
+                    if verbose: 
+                        print "Nouveau gain local:", localMin, "Nodes: ", s1, s2
+                    #GFictif = gainAB
+                    GFictif = localMin
                 
                     
             # Mise a jour du gain global
             if (GFictif < globalMin):
                 improvement = True
                 globalMin = GFictif
-                print "Nouveau gain global:", globalMin, "Nodes:", s1, s2
+                if verbose: 
+                    print "Nouveau gain global:", globalMin, "Nodes:", s1, s2
                 exchangedNodes.append(s1)
                 exchangedNodes.append(s2)
                 
                 # P ← échanger les sommets s1 et s2
-                print "Les noeuds",s1,"et",s2, "ont été échangés"
-                partitionsList = switchNodes(partitionsList,s1,s2)
-                print "Partition 1:", partitionsList[0]
-                print "Partition 2:", partitionsList[1]
+                partitionsList = switchNodes(partitionsList,s1,s2)                
+                if verbose: 
+                    print "Les noeuds",s1,"et",s2, "ont été échangés"                
+                    print "Partition 1:", partitionsList[0]
+                    print "Partition 2:", partitionsList[1]
                 
                 # Mise a jour des listes des sommets à étudier
                 remainingNodesS1 = setRemainingNodes(partitionsList[0],exchangedNodes)
@@ -140,12 +152,13 @@ def kl(graph):
 
   
         if (improvement == False):
-            print "Optimum équilibré trouvé!"
-            print "Global cut:", objf.calculateCut(partitionsList[0], partitionsList[1], graph)
+            if verbose: 
+                print "Optimum équilibré trouvé:", objf.calculateCut(partitionsList[0], partitionsList[1], graph)
             optimumEqu = True
 
-    print ""
-    print "Recherche de sommets uniques à changer..."   
+    if verbose:
+        print ""
+        print "Recherche de sommets uniques à changer..."   
    
     while exchangedNodes != [] :
         localMin = sys.maxint
@@ -156,28 +169,35 @@ def kl(graph):
             # recherche du meilleur gain local            
             if gain < localMin:
                 localMin = gain
-                print "Nouveau gain local:", localMin, "Node: ", node
+                if verbose:
+                    print "Nouveau gain local:", localMin, "Node: ", node
                 s = node
                 GFictif = gain
 
         exchangedNodes.remove(s)        
         if (GFictif < globalMin):
             globalMin = GFictif
-            print "Nouveau gain global:", globalMin, "Node:", s
-            print "Le noeud",s,"a été échangé de partition"
+            if verbose: 
+                print "Nouveau gain global:", globalMin, "Node:", s
+                print "Le noeud",s,"a été échangé de partition"
             partitionsList = switchNodesUnique(partitionsList,s)
  
-    print "Partition Finale 1:", partitionsList[0]
-    print "Partition Finale 2:", partitionsList[1]
-    print "Global cut:", objf.calculateCut(partitionsList[0], partitionsList[1], graph)
+    stopTime = time.time()
+    deltaTime += time.time()
+    print "Temps d'exécution total:", stopTime-startTime
+    print "Temps d'exécution KL:", deltaTime
+    if verbose:
+        print "Partition Finale 1:", partitionsList[0]
+        print "Partition Finale 2:", partitionsList[1]
+    print "Global cut:", objf.calculateCut(partitionsList[0], partitionsList[1], graph)     
     
     
 def main():
-    copyFilename = "graphs/dataUnit.graph"
-    s.copyFileUnit("graphs/data.graph",copyFilename)
+    copyFilename = "../graphs/dataUnit.graph"
+    s.copyFileUnit("../graphs/data.graph",copyFilename)
     #graph = s.createGraph(copyFilename)
-    graph = s.createGraph("graphs/unitEx.graph")
-    kl(graph)
+    graph = s.createGraph("../graphs/unitEx.graph")
+    kl(graph,False)
 
 if __name__ == '__main__':
         main()

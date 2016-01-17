@@ -63,7 +63,10 @@ def setPotentialNodesList(graph,node,markingList,potentialNodesList):
     
        
  # parametres : k le nombre de partitions, graphe    
-def glouton(k, graph):
+def glouton(k, graph, verbose, log):
+    if log:
+        print "Starting basic Glouton.."
+        startTime = time.time()
     # initialisation
     initGraph = graph.copy()
     niList = []
@@ -73,9 +76,10 @@ def glouton(k, graph):
     # initialisation du sommet de départ
     s0 = nodeWithLessNeighbor(graph, markingList)
     markingList.append(s0)
-    print "Sommet de depart :", s0
-    potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)
-    print "Potential Nodes : ", potentialNodesList
+    potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)    
+    if verbose :
+        print "Sommet de depart :", s0    
+        print "Potential Nodes : ", potentialNodesList
     # initialisation de i : numéro de partition courante
     i = 1
     while i < k:
@@ -107,11 +111,23 @@ def glouton(k, graph):
     graph = initGraph
     # probleme : si on ne return pas le graphe, ici il est bien égal
     # à tout le graphe mais sans le return il vaut une partition...
+    
+    stopTime = time.time()
+    if verbose:
+        print "Partition finale 1:", partitionList[0]
+        print "Partition finale 2:", partitionList[1]
+    if log:
+        print "Optimum trouve:", objf.calculateCut(partitionList[0],partitionList[1],graph)
+        print "Execution Time :", stopTime-startTime    
+    
     return partitionList, graph
     
     
      # parametres : k le nombre de partitions, graphe    
-def gloutonWithCut(k, graph):
+def gloutonWithCut(k, graph, verbose,log):
+    if log:
+        print "Starting Glouton With Cut.."
+        startTime = time.time()
     # initialisation
     initGraph = graph.copy()
     niList = []
@@ -121,9 +137,10 @@ def gloutonWithCut(k, graph):
     # initialisation du sommet de départ
     s0 = nodeWithLessNeighbor(graph, markingList)
     markingList.append(s0)
-    print "Sommet de depart :", s0
-    potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)
-    print "PotentialNodesList : ", potentialNodesList
+    potentialNodesList = setPotentialNodesList(graph,s0, markingList, potentialNodesList)    
+    if verbose: 
+        print "Sommet de depart :", s0    
+        print "PotentialNodesList : ", potentialNodesList
     
     # initialisation de i : numéro de partition courante
     i = 1
@@ -165,32 +182,30 @@ def gloutonWithCut(k, graph):
     graph = initGraph
     # probleme : si on ne return pas le graphe, ici il est bien égal
     # à tout le graphe mais sans le return il vaut une partition...
+
+    stopTime = time.time()
+    if verbose:
+        print "Partition finale 1:", partitionList[0]
+        print "Partition finale 2:", partitionList[1]
+    if log:
+        print "Optimum trouve:", objf.calculateCut(partitionList[0],partitionList[1],graph)
+        print "Execution Time :", stopTime-startTime
+    
     return partitionList, graph
 
         
 def main():
-    copyFilename = "graphs/testGraphUnit.graph"
-    #s.copyFileUnit("graphs/data.graph",copyFilename)
-    s.copyFileUnit("graphs/add20.graph",copyFilename)
-    #s.copyFileUnit("graphs/3elt.graph",copyFilename)
-    graph = s.createGraph(copyFilename)
-    #graph = s.createGraph("graphs/unitEx.graph")
-    
-    startTime = time.time()
-    pList, graph = gloutonWithCut(2,graph)
-    stopTime = time.time()
-    print "Partition 1 :", pList[0]
-    print "Partition 2 :", pList[1]
-    print "Size 1 :", len(pList[0])
-    print "Size 2 :", len(pList[1])
-    print objf.calculateCut(pList[0],pList[1],graph)
-    print "Execution Time :", stopTime-startTime
+    #copyFilename = "../graphs/testGraphUnit.graph"
+    #s.copyFileUnit("../graphs/data.graph",copyFilename)
+    #s.copyFileUnit("../graphs/add20.graph",copyFilename)
+    #s.copyFileUnit("../graphs/3elt.graph",copyFilename)
+    #graph = s.createGraph(copyFilename)
+    graph = s.createGraph("../graphs/unitEx.graph")
+    pList, graph = gloutonWithCut(2,graph,False)
 
-def testremoveMarkingNodes():
-    theList = [(1, {'weight': 1}), (2, {'weight': 1}), (1, {'weight': 8}),(1, {'weight': 8})]
-    markingList = [1]
-    theList = removeMarkingNodes(theList, markingList)
-    print theList
+    
+
+
     
 if __name__ == '__main__':
         main()

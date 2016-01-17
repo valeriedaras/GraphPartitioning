@@ -11193,3 +11193,6 @@ Thread count was 4 (of 4 available processors)
 
 Optimal solution found (tolerance 1.00e-04)
 Best objective -4.900000000000e+01, best bound -4.900000000000e+01, gap 0.0%
+
+Gurobi 6.5.0 (mac64) logging started Sun Jan 17 11:32:39 2016
+

@@ -49,7 +49,9 @@ def calculateFictifGainUnique(s,P1,P2,graph):
     return newG
 
 
-def kl(graph):
+def kl(graph,verbose):
+    print "Starting KL version 2.."
+    startTime = time.time()
     ## Initialisation ##
     # Liste de partitions
     partitionsList = []
@@ -60,9 +62,10 @@ def kl(graph):
     
     ## Déroulement de l'algo ##    
     # bipartition
-    partitionsList, graph = g.gloutonWithCut(2,graph)
-    print "Partition Init 1: ", partitionsList[0]
-    print "Partition Init 2: ", partitionsList[1]
+    partitionsList, graph = g.gloutonWithCut(2,graph,False,False)
+    if verbose:
+        print "Partition Init 1: ", partitionsList[0]
+        print "Partition Init 2: ", partitionsList[1]
 
     deltaTime = -time.time()
     
@@ -76,10 +79,10 @@ def kl(graph):
     globalMin = objf.calculateCut(remainingNodesS1,remainingNodesS2,graph)
     #  Initialisation du gain fictif
     GainGlobalFictif = globalMin
-    print "Global Min Initial:", globalMin
-    
-    print ""
-    print "Recherche de sommets uniques à changer..."   
+    if verbose:
+        print "Global Min Initial:", globalMin
+        print ""
+        print "Recherche de sommets uniques à changer..."   
    
     nodesList = nx.nodes(graph)
     iterations = 100
@@ -94,37 +97,42 @@ def kl(graph):
             if gain < localMin  and gain > 0 :
                 improvement = True
                 localMin = gain
-                print "Nouveau gain local:", localMin, "Node: ", node
                 s = node
                 GainGlobalFictif = globalMin - gain
-                print "Gain Global Fictif =", GainGlobalFictif
+                if verbose:
+                    print "Nouveau gain local:", localMin, "Node: ", node
+                    print "Gain Global Fictif =", GainGlobalFictif
 
         if improvement :
             nodesList.remove(s)        
         if (GainGlobalFictif < globalMin):
             globalMin = GainGlobalFictif
-            print "Nouveau gain global:", globalMin, "Node:", s
-            print "Le noeud",s,"a été échangé de partition"
+            if verbose:
+                print "Nouveau gain global:", globalMin, "Node:", s
+                print "Le noeud",s,"a été échangé de partition"
             partitionsList = switchNodesUnique(partitionsList,s)
         
         iterations = iterations - 1
  
+    stopTime = time.time()
     deltaTime += time.time()
-    print "Temps d'exécution:", deltaTime
-    print "Partition Finale 1:", partitionsList[0]
-    print "Partition Finale 2:", partitionsList[1]
+    print "Temps d'exécution total:", stopTime-startTime
+    print "Temps d'exécution KL:", deltaTime
+    if verbose:
+        print "Partition Finale 1:", partitionsList[0]
+        print "Partition Finale 2:", partitionsList[1]
     print "Global cut:", objf.calculateCut(partitionsList[0], partitionsList[1], graph)
     
     
 def main():
-    copyFilename = "graphs/testGraph.graph"
-    #s.copyFileUnit("graphs/data.graph",copyFilename)
-    s.copyFileUnit("graphs/add20.graph",copyFilename)
-    #s.copyFileUnit("graphs/3elt.graph",copyFilename)
+    copyFilename = "../graphs/testGraph.graph"
+    #s.copyFileUnit("../graphs/data.graph",copyFilename)
+    s.copyFileUnit("../graphs/add20.graph",copyFilename)
+    #s.copyFileUnit("../graphs/3elt.graph",copyFilename)
     graph = s.createGraph(copyFilename)
     
-    #graph = s.createGraph("graphs/unitEx.graph")
-    kl(graph)
+    #graph = s.createGraph("../graphs/unitEx.graph")
+    kl(graph,False)
 
 if __name__ == '__main__':
         main()
